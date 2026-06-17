@@ -1,6 +1,7 @@
 const db = new Dexie("TranslationApp");
 db.version(1).stores({ questions: '++id,challenge,hindi_sentence' });
 const store = createPuffStore( "tense-app" );
+let curr = {}
 
 const isCorrect = ( givenAnswer, correctAnswer ) => {
   if ( !givenAnswer || !correctAnswer ) return false;
@@ -132,6 +133,11 @@ const debounce = (func, delay = 300) => {
   };
 }
 
+const AllSorted = {
+  view: vnode => {
+    return m(".notification.has-text-success.enter.has-text-centered.has-text-weight-bold.title.kalam-bold", "🥳 All Sorted!")
+  }
+}
 const Layout = {
   view: function(vnode) {
     return m(".container", [vnode.children, m(AppConfig)]);
@@ -156,9 +162,7 @@ const Model = {
     }
   ),
   size: () => Model.q.length,
-  get: (id) => {
-    return Model.q.filter(f => f.id == id)
-  },
+  get: (id) => Model.q.filter(f => f.id == id),
   getFirst: (id) => Model.get(id)[0],
   getByChallenge: (challenge) => Model.q.filter(f => f.challenge == challenge),
   nextAvailableQuestion: (challenge) => {
@@ -294,59 +298,6 @@ const AppConfig = {
     )
   }
 }
-const FooterControl = {
-  createNewChallenge: async function( ev ) {
-    const els = document.querySelectorAll(".challenge-card-wrapper .selector:checked");
-    let selectedChallenges = Array.from(els).map( el =>  el.dataset.name ).filter( k => !k.startsWith("CUSTOM"));
-    if ( !selectedChallenges.length ) return Toastify({ text: "Please remove custom challenges.", position: "center", close: true, duration: 10*1000, style: { background: "tomato" } }).showToast();
-    let name = await AsyncPop.prompt("Give it a name.");
-    name = `CUSTOM-${name || (new Date()).toLocaleString()}-${Math.ceil(Math.random() * 100)}`;
-    let count = await AsyncPop.prompt("How many questions?");
-    count = count*1;
-    if ( isNaN(count) ) return Toastify({ text: "Enter a valid number.", position: "center" }).showToast()
-    let challenges = await db.questions.where("challenge").anyOf( selectedChallenges ).toArray();
-    challenges = challenges.sort((a, b) => Math.random() - 0.5).slice(0, count).map( q => {
-      return {
-        hindi_sentence: q.hindi_sentence,
-        affirmative: q.affirmative,
-        negative: q.negative,
-        interrogative: q.interrogative,
-        challenge: name
-      }
-    });
-    let a = await db.questions.bulkAdd( challenges );
-    Model.load().then( () => {
-      Toastify({ text: `"${Model.sanitizeChallengeName(name).replace("CUSTOM-", "")}" created.`, position: "center" }).showToast()
-      FooterControl.deselect();
-    })
-  },
-  removeChallenge: async function( ev ) {
-    const els = document.querySelectorAll(".challenge-card-wrapper .selector:checked");
-    let selection = Array.from(els).map( el =>  el.dataset.name ).filter( f => f.toLowerCase().startsWith( "custom" ));
-    if ( !selection.length ) return Toastify({ text: "Only custom created test can be deleted.", position: "center", duration: 10*1000, close: true, style: { background: "tomato"} }).showToast();
-    let res = await db.questions.where("challenge").startsWithAnyOfIgnoreCase( selection ).delete();
-    Model.load().then( () => {
-      Toastify({ text: "Deleted", position: "center", }).showToast()
-      FooterControl.deselect();
-    })
-  },
-  selectAll: function( ev ) {
-    const els = document.querySelectorAll(".challenge-card-wrapper .selector");
-    els.forEach( el =>  el.checked = true );
-  },
-  deselect: function( ev ) {
-    const els = document.querySelectorAll(".challenge-card-wrapper .selector:checked");
-    els.forEach( el => el.checked = false );
-  },
-  view: function( vnode ) {
-    return m("div#footer-control.is-flex.is-gap-2.p-4", [
-      m("button.button.is-primary", { onclick: FooterControl.createNewChallenge }, m(I, "add")),
-      m("button.button.is-danger", { onclick: FooterControl.removeChallenge }, m(I, "delete")),
-      m("button.button", { onclick: FooterControl.selectAll }, m(I, "select_all")),
-      m("button.button", { onclick: FooterControl.deselect }, m(I, "deselect"))
-    ])
-  }
-}
 const Hint = {
   oninit: function (vnode) {
     vnode.state.currentQId = vnode.attrs.qId;
@@ -422,7 +373,7 @@ const ChallengeForm = {
       curr.time_taken ? m(".tag.is-link#time-taken", "⏱️ " + formatDuration(curr.time_taken)) : curr.score ? m(".tag.is-danger", "Couldn't tracked time") : m("#anim-icons", 
       m("#anim-icons-wrapper", [..."⏳🙇⏰👀🥱👀⏰🙇⏳"].map( e => m("", e) ))),
       m("p.tag#qidx", (vnode.attrs.idx || 0) + 1),
-      m("div#question.is-size-5", curr.hindi_sentence),
+      m("div#question.is-size-5.kalam-regular", curr.hindi_sentence),
       m("div#help-tags.tags", [...new Set(doc.verbs().toInfinitive().out("array"))].map( v => m( "span.verbs.tag", v ) )),
     ]),
     m("div", [
@@ -505,7 +456,7 @@ const Challenge = {
       vnode.state.show_full_pagination?
       m(".modal.is-active", [
         m(".modal-background"),
-        m(".modal-content.p-5", m(".box", m("nav.pagination.is-rounded.is-small", m("ul.pagination-list.is-gap-1", 
+        m(".modal-content.p-5", m(".box", m("nav.pagination.is-rounded", m("ul.pagination-list.is-gap-1", 
           vnode.state.qs.map( (q,pi) => m("li", { class: AppConfigModel.is_completed_hidden && q.score == 3?"is-hidden":"" },
           m("button.is-relative.pagination-link", {
             "data-score": q.score,
@@ -521,7 +472,7 @@ const Challenge = {
         )))),
         m("button.modal-close.is-large", { "aria-label":"close", onclick: ev => { vnode.state.show_full_pagination = false; } })
       ]):null,
-      m("nav.pagination.is-rounded.mt-5.is-small", [
+      m("nav.pagination.is-rounded.mt-5", [
         m("button.pagination-previous", {
           onclick: () => {
             vnode.state.idx = ((vnode.state.idx - 1) < 0) ? vnode.state.qs.length - 1 : (vnode.state.idx - 1);
@@ -553,7 +504,6 @@ const ChallengeTitle = {
   }
 }
 
-let curr = {}
 const StatCard = {
   view: vnode => {
     return m(".has-text-centered.info-card."+vnode.attrs.subtitle.replaceAll(/\s+/gi,"-").toLowerCase(), [
@@ -607,7 +557,7 @@ const ChallengeByTab = {
       names = names.filter( k => meta.get(k).score != meta.get(k).count*3)
     let els = names.map((n, i) => m(ChallengeCard, { name: n }));
     return m(".mt-5", { key: vnode.attrs.tab }, [
-      m(".grid.is-col-min-10.is-gap-4", els.length?els:m(".notification.has-text-success.enter.has-text-centered.has-text-weight-bold.title", "🥳 All Sorted!"))
+      m(".grid.is-col-min-10.is-gap-4", els.length?els:m(AllSorted))
     ]);
   }
 }
@@ -632,7 +582,7 @@ const ScoreCard = {
         m('.notification.is-primary.has-text-black.bg-icon.total-attempted', m(".is-flex.is-justify-content-space-between.is-align-items-center",[
           m("", [
             m("p", m("strong.is-size-7", "Translation Mastery") ),
-            m("span.title", vnode.state.qtouched),
+            m("span.title.kalam-bold", vnode.state.qtouched),
             m("span.is-size-6", "/" + vnode.state.qcount),
             m("p.is-size-7", "Completed Sentences")
           ]),
@@ -643,7 +593,7 @@ const ScoreCard = {
         m('.notification.is-warning.has-text-black.bg-icon.total-score', m(".is-flex.is-justify-content-space-between.is-align-items-center",[
           m("", [
             m("p", m("strong.is-size-7", "Total Score") ),
-            m("span.title", vnode.state.qscore),
+            m("span.title.kalam-bold", vnode.state.qscore),
             m("span.is-size-6", "/" + vnode.state.qcount*3),
             m("p.is-size-7", "Lifetime Marks Earned")
           ]),
@@ -653,32 +603,91 @@ const ScoreCard = {
     ])
   }
 }
+const FooterControl = {
+  createNewChallenge: async function( ev ) {
+    const els = document.querySelectorAll(".challenge-card-wrapper .selector:checked");
+    let selectedChallenges = Array.from(els).map( el =>  el.dataset.name ).filter( k => !k.startsWith("CUSTOM"));
+    if ( !selectedChallenges.length ) return Toastify({ text: "Please remove custom challenges.", position: "center", close: true, duration: 10*1000, style: { background: "tomato" } }).showToast();
+    let name = await AsyncPop.prompt("Give it a name.");
+    name = `CUSTOM-${name || (new Date()).toLocaleString()}-${Math.ceil(Math.random() * 100)}`;
+    let count = await AsyncPop.prompt("How many questions?");
+    count = count*1;
+    if ( isNaN(count) ) return Toastify({ text: "Enter a valid number.", position: "center" }).showToast()
+    let challenges = await db.questions.where("challenge").anyOf( selectedChallenges ).toArray();
+    challenges = challenges.sort((a, b) => Math.random() - 0.5).slice(0, count).map( q => {
+      return {
+        hindi_sentence: q.hindi_sentence,
+        affirmative: q.affirmative,
+        negative: q.negative,
+        interrogative: q.interrogative,
+        challenge: name
+      }
+    });
+    let a = await db.questions.bulkAdd( challenges );
+    Model.load().then( () => {
+      Toastify({ text: `"${Model.sanitizeChallengeName(name).replace("CUSTOM-", "")}" created.`, position: "center" }).showToast()
+      FooterControl.deselect();
+    })
+  },
+  removeChallenge: async function( ev ) {
+    const els = document.querySelectorAll(".challenge-card-wrapper .selector:checked");
+    let selection = Array.from(els).map( el =>  el.dataset.name ).filter( f => f.toLowerCase().startsWith( "custom" ));
+    if ( !selection.length ) return Toastify({ text: "Only custom created test can be deleted.", position: "center", duration: 10*1000, close: true, style: { background: "tomato"} }).showToast();
+    let res = await db.questions.where("challenge").startsWithAnyOfIgnoreCase( selection ).delete();
+    Model.load().then( () => {
+      Toastify({ text: "Deleted", position: "center", }).showToast()
+      FooterControl.deselect();
+    })
+  },
+  selectAll: function( ev ) {
+    const els = document.querySelectorAll(".challenge-card-wrapper .selector");
+    els.forEach( el =>  el.checked = true );
+  },
+  deselect: function( ev ) {
+    const els = document.querySelectorAll(".challenge-card-wrapper .selector:checked");
+    els.forEach( el => el.checked = false );
+  },
+  view: function( vnode ) {
+    return m("div#footer-control.is-flex.is-gap-2.p-4", [
+      m("button.button.is-primary", { onclick: FooterControl.createNewChallenge }, m(I, "add")),
+      m("button.button.is-danger", { onclick: FooterControl.removeChallenge }, m(I, "delete")),
+      m("button.button", { onclick: FooterControl.selectAll }, m(I, "select_all")),
+      m("button.button", { onclick: FooterControl.deselect }, m(I, "deselect"))
+    ])
+  }
+}
 const Challenges = {
+  getHeader: () => {
+    return m("nav.fixed-nav.p-4.box.is-radiusless", 
+      m(".is-flex.is-justify-content-center", [
+        m(".is-size-5", [m("span.has-text-info", getEmoji("TenseQuest")), m("span", " | "),m("span.has-text-gray.kalam-bold", "Tense"),m("span.has-text-danger.kalam-light", "Quest")])
+      ]),
+    )
+  },
+  getTabs: vnode => {
+    return m(".tabs.is-boxed.is-small", [
+      m("ul", [
+        {v:"All",e:"🌐"},
+        {v:"Present", e:"⏳"},
+        {v:"Past", e:"📜"},
+        {v:"Future", e:"🚀"},
+        {v:"Custom",e:"🛠️"}
+      ].map(t => m("li", { key: AppConfigModel.last_selected_tab, class: AppConfigModel.last_selected_tab.toLowerCase() == t.v.toLowerCase()?"is-active":"" },
+        m("a", {onclick: () => AppConfigModel.setLastSelectedTab( t.v ) }, m("p", t.e +" "+ t.v)) )
+      ))
+    ])
+  },
   view: function (vnode) {
     let meta = Model.meta();
     let nat = store.getState("active-challenge") || Model.nextAvailableChallenge();
     if ( nat && (meta.get( nat ).score == (meta.get( nat ).count*3)) )
       nat = Model.nextAvailableChallenge();
     return m("#challenges.p-5.enter", [
-      m("nav.fixed-nav.p-4.box.is-radiusless", 
-        m(".is-flex.is-justify-content-center", [
-          m(".is-size-5", [m("span.has-text-info", getEmoji("LingoQuest")), m("span", " | "),m("span.has-text-gray", "Lingo"),m("span.has-text-danger.has-text-weight-bold", "Quest")])
-        ]),
-      ),
+      Challenges.getHeader(),
       m(".section"),
       m(ScoreCard),
-      nat?m(".grid", m(ChallengeCard, {name: nat, is_active_challenge: true}) ):m("p.notification.is-success", "🎉 All done!"),
-      m(".tabs.is-boxed.is-small", [
-        m("ul", [
-          {v:"All",e:"🌐"},
-          {v:"Present", e:"⏳"},
-          {v:"Past", e:"📜"},
-          {v:"Future", e:"🚀"},
-          {v:"Custom",e:"🛠️"}
-        ].map(t => m("li", { key: AppConfigModel.last_selected_tab, class: AppConfigModel.last_selected_tab.toLowerCase() == t.v.toLowerCase()?"is-active":"" },
-          m("a", {onclick: () => AppConfigModel.setLastSelectedTab( t.v ) }, m("p", t.e +" "+ t.v)) )
-        ))
-      ]),
+      nat?m(".grid", m(ChallengeCard, {name: nat, is_active_challenge: true}) ):m(AllSorted),
+      Challenges.getTabs(),
       m(ChallengeByTab, { tab: AppConfigModel.last_selected_tab }),
       m(FooterControl)
     ]);

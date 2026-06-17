@@ -3,20 +3,43 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>LingoQuest || Learn tense by manually translating hindi senteces to english</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<title>TenseQuest: Learn English Tenses with Hindi Translation</title>
+	<meta name="description" content="TenseQuest is an interactive web tool helping Hindi speakers master English tenses through translation practice.">
+	
+	<meta property="og:title" content="TenseQuest: Master English Tenses via Hindi Translation">
+	<meta property="og:description" content="Struggling with English grammar? Use TenseQuest to practice translating Hindi sentences into correct English. Perfect for all skill levels.">
+	<meta property="og:image" content="https://placehold.co/1200x630/4f46e5/ffffff/png?text=TenseQuest%0A+Master+English+Tenses%0A+Hindi+to+English+Practice&font=playfair-display">
+	<meta property="og:url" content="https://sumitkarn12.github.io/LingoQuest">
+	<meta property="og:type" content="website">
+	
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		"name": "TenseQuest",
+		"url": "https://tensequest.com",
+		"description": "An educational web application helping Hindi-speaking users learn and practice English grammar and tenses through translation.",
+		"applicationCategory": "EducationalApplication",
+		"offers": {
+			"@type": "Offer",
+			"price": "0.00",
+			"priceCurrency": "INR"
+		}
+	}
+	</script>
 
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
 	<link rel="stylesheet" href="style.css">
 	<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 	<script src="https://cdn.jsdelivr.net/gh/sumitkarn12/asyncpop@latest/dist/asyncpop.min.js"></script>
 
-	<link rel="icon" type="image/x-icon" href="https://placehold.co/600x600/orange/white/png?font=playfair-display&text=LQ">
+	<link rel="icon" type="image/x-icon" href="https://placehold.co/600x600/4f46e5/ffffff/png?font=playfair-display&text=TQ">
 
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-	<link rel="stylesheet"
-		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;icon_names=add,apps,arrow_back,arrow_forward,book_2,circle,close,delete,deselect,done_all,download,footprint,fullscreen,fullscreen_exit,grid_off,grid_on,lightbulb,lock,recenter,rocket_launch,save,schedule,select_all,star,trophy,upload,volume_off,volume_up">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;icon_names=add,apps,arrow_back,arrow_forward,book_2,circle,close,delete,deselect,done_all,download,footprint,fullscreen,fullscreen_exit,grid_off,grid_on,lightbulb,lock,recenter,rocket_launch,save,schedule,select_all,star,trophy,upload,volume_off,volume_up">
 	<script src="https://cdn.jsdelivr.net/gh/sumitkarn12/puff-state@v1.2.0/dist/puff-state.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/gh/sumitkarn12/SonicFX@latest/src/sonicfx.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@hiseb/confetti@2.1.0/dist/confetti.min.js"></script>
