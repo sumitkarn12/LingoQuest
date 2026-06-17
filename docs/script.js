@@ -140,6 +140,16 @@ const Layout = {
 const Model = {
   q: [],
   m: new Map(),
+  fetch: ( cb ) => {
+      fetch("https://api.npoint.io/bb12b8dd995e7ae59512")
+        .then(res => res.ok ? res.json() : res.text())
+        .catch( e => Toastify({ text: JSON.stringify( e ) }).showToast())
+        .then(async (data) => {
+          await db.questions.clear();
+          await db.questions.bulkAdd(data);
+          if ( cb ) cb( data )
+        });
+  },
   load: () => db.questions.toArray(r => {
       Model.q = r;
       return Model.meta();
@@ -172,6 +182,7 @@ const Model = {
     let m = Model.m;
     if ( m.size ) return m;
     m = new Map();
+    if( Model.q.length == 0 ) Model.fetch();
     Model.q.forEach(q => {
       let a = m.get(q.challenge) || {};
       a.score = (a.score || 0) + (q.score || 0)
@@ -203,19 +214,10 @@ const Loading = {
   view: function (vnode) {
     db.questions.count(c => {
       if (c) return m.route.set("challenges");
-      fetch("https://api.npoint.io/bb12b8dd995e7ae59512")
-        .then(res => res.ok ? res.json() : res.text())
-        .catch(console.error)
-        .then(async (data) => {
-          await db.questions.clear();
-          await db.questions.bulkAdd(data);
-          m.route.set("challenges")
-        });
+      Model.fetch( () => m.route.set("challenges") );
     })
 
-    return m("#loading",
-      m('button.button.is-loading.is-large', "Loading data...")
-    );
+    return m("#loading", m('button.button.is-loading.is-large', "Loading data...") );
   }
 }
 const AppConfigModel = {
