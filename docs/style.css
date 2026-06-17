@@ -31,7 +31,7 @@ html { scroll-behavior: smooth; user-select: none; }
 .challenge-card-wrapper { position: relative; height: stretch; }
 .challenge-card-wrapper .box { height: stretch; }
 
-.challenge-card-wrapper .selector {--s: 18px;position: absolute; bottom: 0; right: 0; transform: translate(-100%, -100%);width: var(--s);height: var(--s);z-index: 1;}
+.challenge-card-wrapper .selector {--s: 32px; position: absolute; bottom: 8px; right: 8px; width: var(--s);height: var(--s);z-index: 1; cursor: pointer; }
 .active-challenge-wrapper { margin: 0 auto; max-width: 320px; }
 .active-challenge { position: relative; overflow: hidden; }
 .active-challenge::before { content: "Active Challenge"; position: absolute; top: 0; right: 0; background-color: #9494fe; color: #0000ff; padding: 2px 12px; font-size: 10px; border-bottom-left-radius: 12px; }
